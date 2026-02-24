@@ -1,1 +1,85 @@
 Architecture 
+
+# 🏗️ Architecture Design - Distributed Rate Limiter System
+
+## 📌 Overview
+
+This document explains the high-level architecture of the Distributed Rate Limiter system designed to handle millions of requests with low latency and high availability.
+
+The system ensures that API requests are controlled using the Token Bucket algorithm while maintaining scalability.
+
+---
+
+# 🌐 High-Level Architecture Flow
+
+Client  
+   ↓  
+API Gateway / Load Balancer  
+   ↓  
+Rate Limiter Service  
+   ↓  
+Redis Cluster (Distributed Cache)  
+   ↓  
+Application Servers  
+
+Monitoring & Logging System connected to Redis and App Servers.
+
+---
+
+# 🧩 Components Explained
+
+## 1️⃣ Client
+
+- Sends API requests
+- Could be web app, mobile app, or third-party service
+- Each request contains user ID or API key
+
+---
+
+## 2️⃣ API Gateway / Load Balancer
+
+- Distributes traffic across multiple application servers
+- Performs basic authentication validation
+- Handles SSL termination
+- Prevents direct exposure of internal services
+
+Examples:
+- Nginx
+- Kong
+- AWS API Gateway
+
+---
+
+## 3️⃣ Rate Limiter Service
+
+Core logic layer.
+
+Responsibilities:
+- Checks if user has available tokens
+- Applies Token Bucket algorithm
+- Communicates with Redis
+- Returns:
+  - 200 → Allowed
+  - 429 → Too Many Requests
+
+This layer should be:
+- Stateless
+- Horizontally scalable
+- Fast (<10ms overhead)
+
+---
+
+## 4️⃣ Redis Cluster (Distributed Cache)
+
+Why Redis?
+
+- Extremely fast in-memory storage
+- Atomic increment operations
+- Built-in TTL (Time to Live)
+- Suitable for distributed systems
+
+Stores:
+- User token count
+- Last refill timestamp
+
+Key Format Example:
